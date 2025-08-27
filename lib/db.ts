@@ -1,20 +1,40 @@
 import mongoose from "mongoose";
 
-let isConnected = false;
+const MONGO_URI = process.env.MONGO_URI!;
 
-export const connectDB = async () => {
-  if (isConnected) return;
-  try {
-    await mongoose.connect(process.env.MONGODB_URI as string, {
-      dbName: "ai_chat",
-    });
-    isConnected = true;
-    console.log("✅ MongoDB connected");
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
+if (!MONGO_URI) {
+  throw new Error("Please add your Mongo URI to .env");
+}
+
+// Global cache object across hot reloads & serverless invocations
+let cached = (global as any).mongoose || { conn: null, promise: null };
+
+export async function connectDB() {
+  if (cached.conn) {
+    console.log("Using cached MongoDB connection");
+    return cached.conn; // return existing connection
   }
-  // finally {
-  //   // Ensures that the client will close when you finish/error
-  //   await mongoose.disconnect();
-  // }
-};
+
+  if (!cached.promise) {
+    console.log("Creating new MongoDB connection...");
+    cached.promise = mongoose
+      .connect(MONGO_URI, {
+        bufferCommands: false, // disables mongoose buffering
+      })
+      .then((mongoose) => {
+        console.log("MongoDB connected successfully");
+        return mongoose;
+      });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (error) {
+    cached.promise = null; // reset if connection failed
+    console.error("MongoDB connection error:", error);
+    throw error;
+  }
+
+  (global as any).mongoose = cached; // save in global
+  return cached.conn;
+}

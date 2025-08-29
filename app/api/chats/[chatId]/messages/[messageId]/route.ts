@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Message from "@/models/message";
 
-export async function PATCH(req: Request, { params }: { params: { chatId: string; messageId: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ chatId: string; messageId: string }> }) {
   try {
     await connectDB();
     const data = await req.json();
+    const { chatId, messageId } = await params;
     const updated = await Message.findOneAndUpdate(
-      { _id: params.messageId, chatId: params.chatId },
+      { _id: messageId, chatId: chatId },
       data,
       { new: true }
     );

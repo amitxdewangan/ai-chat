@@ -3,7 +3,7 @@ import mongoose, { Schema, Document, models } from "mongoose";
 export interface Message extends Document {
   chatId: mongoose.Types.ObjectId;
   sender: "user" | "assistant" | "system";
-  content: string;
+  text: string;
   edited: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -21,7 +21,7 @@ const MessageSchema = new Schema<Message>(
       enum: ["user", "assistant", "system"],
       required: true 
     },
-    content: { 
+    text: { 
       type: String, 
       required: true 
     },

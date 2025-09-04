@@ -1,47 +1,105 @@
 "use client";
 
-import { useState } from "react";
-import Message from "@/components/ui/message";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, TextStreamChatTransport } from "ai";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import Message from "./message";
+import { useState, FormEvent } from "react";
+import ChatInput from "./chat-input";
 
-export default function ChatUI() {
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
-    { role: "assistant", content: "Hello! How can I help you today?" },
-  ]);
+interface DBMessage {
+  _id: string;
+  sender: "user" | "assistant" | "system";
+  text: string;
+}
+
+interface NormalizedMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  text: string;
+}
+
+export default function ChatUI({ chatId }: { chatId: string }) {
   const [input, setInput] = useState("");
 
-  const handleSend = () => {
+  // Load messages from DB
+  const { data: dbMessages, isLoading } = useQuery<DBMessage[]>({
+    queryKey: ["messages", chatId],
+    queryFn: async () => (await api.get(`/chats/${chatId}/messages`)).data,
+  });
+
+  // AI SDK for streaming messages
+  const { messages: aiMessages, sendMessage, status, error } = useChat({
+    // transport: new DefaultChatTransport({
+    transport: new TextStreamChatTransport({
+      api: `/api/chats/${chatId}/ai`, // connects to AI route
+    }),
+  });
+
+   // Normalize DB messages
+  const normalizedDb: NormalizedMessage[] = (dbMessages ?? []).map((m) => ({
+    id: m._id,
+    role: m.sender,
+    text: m.text,
+  }));
+
+   // Normalize AI messages
+  const normalizedAi: NormalizedMessage[] = (aiMessages ?? []).map((m, idx) => {
+    const text = m.parts
+      .map((p) => (p.type === "text" ? p.text : ""))
+      .join("");
+
+    return {
+      id: m.id ?? `ai-${idx}`,
+      role: m.role as "user" | "assistant" | "system",
+      text,
+    };
+  });
+
+
+    // Final merged list
+  const allMessages: NormalizedMessage[] = [...normalizedDb, ...normalizedAi];
+
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!input.trim()) return;
-    setMessages([...messages, { role: "user", content: input }]);
+
+    sendMessage({ text: input });
     setInput("");
   };
 
-  return (
-    <div className="flex flex-col flex-1">
-      {/* Chat messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-zinc-950">
-        {messages.map((msg, idx) => (
-          <Message key={idx} role={msg.role} content={msg.content} />
-        ))}
-      </div>
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      handleSubmit(event as unknown as FormEvent<HTMLFormElement>);
+    }
+  };
 
-      {/* Input bar */}
-      <div className="border-t border-zinc-800 p-4">
-        <div className="flex items-center gap-2">
-          <textarea
-            className="flex-1 resize-none rounded-lg bg-zinc-900 p-2 text-zinc-100 focus:outline-none"
-            rows={1}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Send a message..."
-          />
-          <button
-            onClick={handleSend}
-            className="px-4 py-2 rounded-lg bg-accent-green hover:bg-accent-green-dark text-white"
-          >
-            Send
-          </button>
-        </div>
+  return (
+    <div className="flex justify-center h-full w-full bg-zinc-950">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-0 py-10 pb-28 sm:px-0 md:px-24 lg:px-64 space-y-12">
+        {isLoading ? (
+          <div className="text-center text-zinc-400">Loading messages...</div>
+        ) : (
+          allMessages.map((m) => (
+            <Message key={m.id} sender={m.role} content={m.text} />
+          ))
+        )}
+        
+        {error && <p className="text-red-500 text-center">Error: {error.message}</p>}
       </div>
+      
+      {/* Input area */}
+      <ChatInput
+        input={input}
+        setInput={setInput}
+        status={status}
+        handleSubmit={handleSubmit}
+        handleKeyDown={handleKeyDown}
+      />
     </div>
   );
 }

@@ -34,9 +34,8 @@ export default function ChatInput({ input, setInput, status, handleSubmit, handl
           className="absolute bottom-1.5 right-3 w-fit h-fit p-1.5 rounded-full disabled:opacity-50"
           variant="secondary"
           size="icon"
-          asChild={true}
         >
-          <CircleArrowUp size={24} />
+          <CircleArrowUp className="size-6" />
         </Button>
       </div>
     </form>

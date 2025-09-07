@@ -5,7 +5,7 @@ import { DefaultChatTransport, TextStreamChatTransport } from "ai";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import Message from "./message";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useRef, useEffect } from "react";
 import ChatInput from "./chat-input";
 
 interface DBMessage {
@@ -22,6 +22,7 @@ interface NormalizedMessage {
 
 export default function ChatUI({ chatId }: { chatId: string }) {
   const [input, setInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load messages from DB
   const { data: dbMessages, isLoading } = useQuery<DBMessage[]>({
@@ -77,6 +78,12 @@ export default function ChatUI({ chatId }: { chatId: string }) {
     }
   };
 
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "instant", block: "start" });
+    }
+  }, [allMessages.length]);
+
   return (
     <div className="flex justify-center h-full w-full bg-zinc-950">
       {/* Messages */}
@@ -84,14 +91,17 @@ export default function ChatUI({ chatId }: { chatId: string }) {
         {isLoading ? (
           <div className="text-center text-zinc-400">Loading messages...</div>
         ) : (
-          allMessages.map((m) => (
-            <Message key={m.id} sender={m.role} content={m.text} />
-          ))
+          <>
+            {allMessages.map((m) => (
+              <Message key={m.id} sender={m.role} content={m.text} />
+            ))}
+            <div ref={messagesEndRef} />
+          </>
         )}
         
         {error && <p className="text-red-500 text-center">Error: {error.message}</p>}
       </div>
-      
+
       {/* Input area */}
       <ChatInput
         input={input}

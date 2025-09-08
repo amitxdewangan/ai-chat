@@ -87,19 +87,19 @@ export default function ChatUI({ chatId }: { chatId: string }) {
   return (
     <div className="flex justify-center h-full w-full bg-zinc-950">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-0 py-10 pb-28 sm:px-0 md:px-24 lg:px-64 space-y-12">
-        {isLoading ? (
-          <div className="text-center text-zinc-400">Loading messages...</div>
-        ) : (
-          <>
-            {allMessages.map((m) => (
-              <Message key={m.id} sender={m.role} content={m.text} />
-            ))}
-            <div ref={messagesEndRef} />
-          </>
-        )}
-        
-        {error && <p className="text-red-500 text-center">Error: {error.message}</p>}
+      <div className="flex-1 overflow-y-auto px-0 py-10 pb-28 sm:px-0 md:px-24 lg:px-64 space-y-12 custom-scrollbar">
+          {isLoading ? (
+            <div className="text-center text-zinc-400">Loading messages...</div>
+          ) : (
+            <>
+              {allMessages.map((m) => (
+                <Message key={m.id} sender={m.role} content={m.text} />
+              ))}
+              <div ref={messagesEndRef} />
+            </>
+          )}
+          
+          {error && <p className="text-red-500 text-center">Error: {error.message}</p>}
       </div>
 
       {/* Input area */}

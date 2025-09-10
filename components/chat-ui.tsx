@@ -109,6 +109,7 @@ export default function ChatUI({ chatId }: { chatId: string }) {
         status={status}
         handleSubmit={handleSubmit}
         handleKeyDown={handleKeyDown}
+        className="fixed bottom-4"
       />
     </div>
   );

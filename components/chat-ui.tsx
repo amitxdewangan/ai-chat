@@ -85,7 +85,7 @@ export default function ChatUI({ chatId }: { chatId: string }) {
   }, [allMessages.length]);
 
   return (
-    <div className="flex justify-center h-full w-full bg-zinc-950">
+    <div className="flex justify-center h-full w-full bg-gradient-to-b from-zinc-900 to-zinc-950">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-0 py-10 pb-28 sm:px-0 md:px-24 lg:px-64 space-y-12 custom-scrollbar">
           {isLoading ? (
@@ -109,7 +109,7 @@ export default function ChatUI({ chatId }: { chatId: string }) {
         status={status}
         handleSubmit={handleSubmit}
         handleKeyDown={handleKeyDown}
-        className="fixed bottom-4"
+        className="fixed bottom-4 border border-zinc-800 shadow-md shadow-zinc-800"
       />
     </div>
   );

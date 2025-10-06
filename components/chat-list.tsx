@@ -6,7 +6,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import NewChat from "./new-chat";
 import { redirect } from "next/navigation";
-import { LoaderCircle, SquarePen } from "lucide-react"
+import { LoaderCircle } from "lucide-react"
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 
 export default function ChatList() {
   const qc = useQueryClient();
@@ -26,37 +27,34 @@ export default function ChatList() {
   });
 
   return (
-    <div className="max-h-screen overflow-y-scroll px-2 py-6 w-1/6 custom-scrollbar">
-      {/* <Button onClick={() => createChat.mutate()}>+ New Chat</Button> */}
-      <Button 
-        onClick={() => redirect("/chats")}
-        variant="ghost" 
-        size="default" 
-        className="w-full justify-start mb-4 hover:text-white hover:bg-zinc-800 space-x-1"
-      >
-        <SquarePen className="size-5" />
-        <span>New Chat</span>
-      </Button>
-
-      <ul className="mt-4 space-y-1">
-        <p className="text-zinc-200 mb-2 px-3 py-1">Chats</p>
-        {isLoading ? (
-          <LoaderCircle className="animate-spin mx-auto my-24 size-7" />
-        ) : (
-          chats?.map((chat: any) => (
-          <Button 
-            key={chat._id}
-            variant="ghost" 
-            size="sm" 
-            className="w-full justify-start hover:text-white hover:bg-zinc-800"
-          >
-            <Link href={`/chats/${chat._id}`}>
-              {chat.title}
-            </Link>
-          </Button>
-          ))
-        )}
-      </ul>
-    </div>
+    <SidebarMenu className="space-y-1 w-full">
+      {isLoading ? (
+        <LoaderCircle className="animate-spin mx-auto my-24 size-7 text-white" />
+      ) : (
+        chats?.map((chat: any) => {
+          return (
+            <SidebarMenuItem key={chat._id}>
+              <SidebarMenuButton
+                asChild
+                variant="default"
+                isActive={false}
+                className="w-full justify-start px-2 transition-colors bg-zinc-900 text-white hover:bg-zinc-800 hover:text-white"
+              >
+                <Link href={`/chats/${chat._id}`} className="w-full block text-left truncate">
+                  <span>{chat.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          );
+        })
+      )}
+    </SidebarMenu>
   );
 }
+
+// const [chats, setChats] = useState<string[]>(["First Chat"]);
+
+//   const addChat = () => {
+//     setChats([...chats, `New Chat ${chats.length + 1}`]);
+//   };
+

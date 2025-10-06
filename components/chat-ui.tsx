@@ -23,11 +23,21 @@ interface NormalizedMessage {
 export default function ChatUI({ chatId }: { chatId: string }) {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [queryEnabled, setQueryEnabled] = useState(true);
+  const hasMounted = useRef(false);
+
+  useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      setQueryEnabled(false);
+    }
+  }, []);
 
   // Load messages from DB
   const { data: dbMessages, isLoading } = useQuery<DBMessage[]>({
     queryKey: ["messages", chatId],
     queryFn: async () => (await api.get(`/chats/${chatId}/messages`)).data,
+    enabled: queryEnabled,
   });
 
   // AI SDK for streaming messages
@@ -38,14 +48,14 @@ export default function ChatUI({ chatId }: { chatId: string }) {
     }),
   });
 
-   // Normalize DB messages
+  // Normalize DB messages
   const normalizedDb: NormalizedMessage[] = (dbMessages ?? []).map((m) => ({
     id: m._id,
     role: m.sender,
     text: m.text,
   }));
 
-   // Normalize AI messages
+  // Normalize AI messages
   const normalizedAi: NormalizedMessage[] = (aiMessages ?? []).map((m, idx) => {
     const text = m.parts
       .map((p) => (p.type === "text" ? p.text : ""))
@@ -58,10 +68,8 @@ export default function ChatUI({ chatId }: { chatId: string }) {
     };
   });
 
-
-    // Final merged list
+  // Final merged list
   const allMessages: NormalizedMessage[] = [...normalizedDb, ...normalizedAi];
-
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

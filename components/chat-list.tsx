@@ -1,31 +1,19 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import NewChat from "./new-chat";
-import { redirect } from "next/navigation";
 import { LoaderCircle } from "lucide-react"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { usePathname } from "next/navigation";
 
 export default function ChatList() {
-  const qc = useQueryClient();
   const pathname = usePathname();
 
   // Fetch all chats
   const { data: chats, isLoading } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => (await api.get("/chats?userId=64a2c9f1e9a4b8d1f8a12345")).data,
-  });
-
-  // Create new chat
-  const createChat = useMutation({
-    mutationFn: async () =>
-      (await api.post("/chats", { userId: "64a2c9f1e9a4b8d1f8a12345", title: "New Chat" })).data,
-    
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["chats"] }), // refetch chats after creating
   });
 
   return (

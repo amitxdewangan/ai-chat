@@ -14,6 +14,7 @@ export default function ChatList() {
   const { data: chats, isLoading } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => (await api.get("/chats?userId=64a2c9f1e9a4b8d1f8a12345")).data,
+    staleTime: Infinity, // chats don't change often, we can cache them indefinitely
   });
 
   return (

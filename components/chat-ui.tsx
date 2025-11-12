@@ -1,11 +1,12 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, TextStreamChatTransport } from "ai";
+import { TextStreamChatTransport } from "ai";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import Message from "./message";
 import { useState, FormEvent, useRef, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import ChatInput from "./chat-input";
 
 interface DBMessage {
@@ -25,6 +26,9 @@ export default function ChatUI({ chatId }: { chatId: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [queryEnabled, setQueryEnabled] = useState(true);
   const hasMounted = useRef(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const firstSentRef = useRef(false);
 
   useEffect(() => {
     if (!hasMounted.current) {
@@ -47,6 +51,22 @@ export default function ChatUI({ chatId }: { chatId: string }) {
       api: `/api/chats/${chatId}/ai`, // connects to AI route
     }),
   });
+
+  // If the URL contains ?firstMessage=..., send it once and then remove the param
+  useEffect(() => {
+    const firstMessage = searchParams?.get?.("firstMessage") ?? null;
+    if (firstMessage && !firstSentRef.current) {
+      firstSentRef.current = true;
+
+      // send the initial message
+      sendMessage({ text: firstMessage });
+      
+      // remove the query param so it's not resent on navigation or remount
+      router.replace(`/chats/${chatId}`);
+    }
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, chatId, sendMessage]);
 
   // Normalize DB messages
   const normalizedDb: NormalizedMessage[] = (dbMessages ?? []).map((m) => ({

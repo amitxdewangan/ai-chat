@@ -8,6 +8,7 @@ import Message from "./message";
 import { useState, FormEvent, useRef, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ChatInput from "./chat-input";
+import { LoaderCircle } from "lucide-react";
 
 interface DBMessage {
   _id: string;
@@ -117,7 +118,9 @@ export default function ChatUI({ chatId }: { chatId: string }) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-0 py-10 pb-28 sm:px-0 md:px-24 lg:px-64 space-y-12 custom-scrollbar">
           {isLoading ? (
-            <div className="text-center text-zinc-400">Loading messages...</div>
+            <div className="flex justify-center items-center h-full text-zinc-100">
+              <LoaderCircle className="animate-spin size-10" />
+            </div>
           ) : (
             <>
               {allMessages.map((m) => (

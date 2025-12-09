@@ -13,6 +13,12 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type?: "error" | "success" } | null>(null);
+
+  function showToast(message: string, type: "error" | "success") {
+    setToast({ message, type });
+    window.setTimeout(() => setToast(null), 4000);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,7 +45,15 @@ export default function Signup() {
         return;
       }
 
-      // After successful signup, sign the user in via NextAuth (credentials)
+      let remote: { message?: string } | undefined = undefined;
+      if (typeof res === "object" && res !== null && "data" in res) {
+        remote = (res as { data?: { message?: string } })?.data;
+      }
+      
+      const message = (remote?.message && "Account created successfully") ?? "Account created successfully";
+      showToast(message, "success");
+
+      // After successful signup, sign in the user via NextAuth (credentials)
       const signin = (await signIn("credentials", {
         redirect: false,
         email,
@@ -49,28 +63,38 @@ export default function Signup() {
       if (signin && signin.error) {
         setError(signin.error || "Sign in failed");
         setLoading(false);
+        router.push("/user/login");
         return;
-      }
-
-      setError("Registration successful! Redirecting...");
+      } 
 
       // Redirect to chats page after successful sign in
-      setTimeout(() => {
-        router.push("/chats");
-      }, 4000);
+      router.push("/chats");
 
     } 
-    catch (err: any) {
-      const remote = err?.response?.data;
-      setError(remote?.error || "An unexpected error occurred");
+    catch (err: unknown) {
+      let remote: { error?: string } | undefined = undefined;
 
-    } finally {
+      if (typeof err === "object" && err !== null && "response" in err) {
+        remote = (err as { response?: { data?: { error?: string } } }).response?.data;
+      }
+
+      const message = remote?.error;
+
+      if(message){
+        setError(message);
+      }
+      else{
+        showToast("An unexpected error occurred", "error");
+      }
+
+    } 
+    finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-foreground">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-md rounded-md bg-zinc-900 p-6 shadow-md"
@@ -130,6 +154,20 @@ export default function Signup() {
           </a>
         </div>
       </form>
+
+      {toast && (
+        <div className="fixed top-6 z-50 flex justify-center">
+          <div
+            className={
+              "max-w-sm rounded-md px-4 py-2 shadow-lg " +
+              (toast.type === "error" ? "bg-red-600 text-white" : "bg-green-600 text-white")
+            }
+          >
+            {toast.message}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

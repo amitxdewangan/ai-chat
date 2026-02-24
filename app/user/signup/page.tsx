@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import type { SignInResponse } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 
 export default function Signup() {
@@ -14,6 +14,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type?: "error" | "success" } | null>(null);
+  const searchParams = useSearchParams();
 
   function showToast(message: string, type: "error" | "success") {
     setToast({ message, type });
@@ -93,6 +94,37 @@ export default function Signup() {
     }
   }
 
+  async function handleGoogleLogin() {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const result = await signIn("google");
+      console.log("Google sign-in result:", result);
+      
+      if(searchParams.get("error")){
+        setError("Google sign-in error");
+        return;
+      }
+      
+      // check the result object for error property and handle it
+      if(result && result.error){
+        setError("Google sign-in error");
+        setLoading(false);
+        return;
+      }
+
+      router.push("/chats");
+    } 
+    catch (err) {
+      console.error("hello error", err);
+      showToast("Google sign-in error", "error");
+    } 
+    finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-foreground">
       <form
@@ -142,6 +174,16 @@ export default function Signup() {
           className="w-full rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-60"
         >
           {loading ? "Creating account..." : "Sign up"}
+        </button>
+
+         <div className="my-3 flex items-center gap-2">
+          <div className="h-px flex-1 bg-zinc-700" />
+          <div className="text-sm text-zinc-500">or</div>
+          <div className="h-px flex-1 bg-zinc-700" />
+        </div>
+
+        <button type="button" onClick={handleGoogleLogin} className="w-full rounded border border-zinc-700 bg-zinc-800 px-4 py-2 text-white hover:bg-zinc-700">
+          Login with Google
         </button>
 
         <div className="mt-3 text-center text-sm text-zinc-400">

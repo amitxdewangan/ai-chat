@@ -5,15 +5,19 @@ import { api } from "@/lib/api";
 import Link from "next/link";
 import { LoaderCircle } from "lucide-react"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function ChatList() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session, status: sessionStatus } = useSession( { required: true, onUnauthenticated() { router.push("/user/login"); } });
+  const userId = session?.user?.id;
 
-  // Fetch all chats
+  // Fetch all chats for the logged-in user
   const { data: chats, isLoading } = useQuery({
     queryKey: ["chats"],
-    queryFn: async () => (await api.get("/chats?userId=64a2c9f1e9a4b8d1f8a12345")).data,
+    queryFn: async () => (await api.get(`/chats?userId=${userId}`)).data,
     staleTime: Infinity, // chats don't change often, we can cache them indefinitely
   });
 
@@ -22,7 +26,7 @@ export default function ChatList() {
       {isLoading ? (
         <LoaderCircle className="animate-spin mx-auto my-24 size-7 text-white" />
       ) : (
-        chats?.map((chat: any) => {
+        chats?.map((chat: { _id: string; title: string }) => {
           const chatPath = `/chats/${chat._id}`;
           const isActive = pathname === chatPath;
           return (

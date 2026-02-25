@@ -5,17 +5,22 @@ import { LoaderCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 
 export default function NewChat() {
   const [input, setInput] = useState("");
   const router = useRouter()
   const qc = useQueryClient();
+  const { data: session, status: sessionStatus } = useSession({ required: true, onUnauthenticated() { router.push("/user/login"); } });
+  const userId = session?.user?.id;
 
   // Create new chat
   const createChat = useMutation({
     mutationFn: async () =>
-      (await api.post("/chats", { userId: "64a2c9f1e9a4b8d1f8a12345", title: "New Chat 79" })).data,
+      // (await api.post("/chats", { userId: "64a2c9f1e9a4b8d1f8a12345", title: "New Chat 79" })).data,
+      // Pass the logged-in user's id from the session to the API
+      (await api.post("/chats", { userId: userId, title: "New Chat 79" })).data,
 
     onSuccess: (data) => {
       // console.log("Chat created, data: ", data);

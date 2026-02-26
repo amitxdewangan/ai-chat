@@ -10,11 +10,15 @@ import {
   SidebarHeader,
   SidebarMenuButton,
   SidebarSeparator,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { SquarePen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatList from "@/components/chat-list";
 import { redirect } from "next/navigation";
+import UserProfileMenu from "./user-profile-menu";
 
 export default function AppSidebar() {
   const { state } = useSidebar();
@@ -80,7 +84,19 @@ export default function AppSidebar() {
             <ChatList />
           </SidebarGroupContent>
         </SidebarGroup>
+
       </SidebarContent>
+
+      <SidebarFooter className={cn("bg-zinc-900")}>
+        <SidebarMenu>
+          <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <UserProfileMenu />
+              </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      
     </Sidebar>
   );
 }

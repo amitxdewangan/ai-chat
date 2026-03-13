@@ -8,7 +8,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(() => new QueryClient());
 
   return (
-    <SessionProvider refetchOnWindowFocus={false} refetchWhenOffline={false} refetchInterval={1 * 60}>
+    <SessionProvider refetchOnWindowFocus={false} refetchWhenOffline={false} refetchInterval={10 * 60}>
       <QueryClientProvider client={client}>
         {children}
       </QueryClientProvider>

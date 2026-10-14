@@ -1,4 +1,4 @@
-# AI Chat (ChatGPT Clone)
+# AI Chat
 
 A full-stack conversational AI application, featuring real-time streaming responses, persistent conversation history, long-term memory across sessions, and secure user authentication.
 
